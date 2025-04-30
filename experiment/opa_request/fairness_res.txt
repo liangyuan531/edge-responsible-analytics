@@ -1,0 +1,12 @@
+{
+  "client_addr": "10.200.3.99:41494",
+  "level": "info",
+  "msg": "Sent response.",
+  "req_id": 33,
+  "req_method": "POST",
+  "req_path": "/v1/data/policies/fairness/demographic_parity/allow",
+  "resp_bytes": 69,
+  "resp_duration": 0.607283,
+  "resp_status": 200,
+  "time": "2024-10-28T15:27:55+10:30"
+}

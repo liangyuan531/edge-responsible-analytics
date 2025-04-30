@@ -15,7 +15,7 @@ source /path/to/your_folder/venv/bin/activate
 pip install --upgrade pip setuptools wheel
 
 # Install required Python libraries
-pip install tensorflow paho-mqtt numpy flask transformers scikit-learn kaggle fairlearn
+pip install tensorflow paho-mqtt numpy flask transformers scikit-learn kaggle fairlearn psutil tf-keras Pillow
 
 ## config MQTT to allow communication
 Matt config file (Mac): /opt/homebrew/etc/mosquitto/mosquitto.conf
@@ -33,6 +33,15 @@ opa run --server --set=decision_logs.console=true ./opa/policies
 
 ## Run the system (assume under the project root folder)
 ### Local server side
-python 3 edge_process/aggregator.py
+python3 edge_process/aggregator.py
 ### edge side
 python3 edge/edge_task_processing.py
+
+
+kubectl create secret docker-registry mlops \
+  --docker-server=https://index.docker.io/v2/ \
+  --docker-username=edgemlops \
+  --docker-password=yl15884563651
+
+# Install
+

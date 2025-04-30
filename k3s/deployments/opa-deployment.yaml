@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: opa
+  labels:
+    app: opa
+spec:
+  serviceName: "opa"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: opa
+  template:
+    metadata:
+      labels:
+        app: opa
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - liang-local-server-1
+                - liang-local-server-2
+                - liang-cloud-server
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - opa
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: opa
+          image: openpolicyagent/opa:edge-static
+          args:
+            - "run"
+            - "--server"
+            - "--addr=:8181"
+            - "--log-level=debug"
+            - "/policies"
+          volumeMounts:
+            - name: opa-policies
+              mountPath: /policies
+      volumes:
+        - name: opa-policies
+          projected:
+            sources:
+              - configMap:
+                  name: opa-fairness-policies
+                  items:
+                    - key: fairness_thresholds.json
+                      path: fairness_thresholds.json
+                    - key: fairness.rego
+                      path: fairness.rego
+              - configMap:
+                  name: opa-reliability-policies
+                  items:
+                    - key: reliability_thresholds.json
+                      path: reliability_thresholds.json
+                    - key: reliability.rego
+                      path: reliability.rego
+              - configMap:
+                  name: opa-explainability-policies
+                  items:
+                    - key: explainability_thresholds.json
+                      path: explainability_thresholds.json
+                    - key: explainability.rego
+                      path: explainability.rego
+              - configMap:
+                  name: opa-privacy-policies                  
+                  items:
+                    - key: privacy_thresholds.json
+                      path: privacy_thresholds.json
+                    - key: privacy.rego
+                      path: privacy.rego

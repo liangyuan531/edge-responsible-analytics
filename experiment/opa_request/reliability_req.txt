@@ -1,0 +1,35 @@
+{
+  "decision_id": "bafab30f-7255-4252-913b-7fe8803e7e2d",
+  "input": {
+    "reliability": {
+      "metrics": {
+        "reliability_score": 0.5,
+        "success_rate": 0.5
+      },
+      "threshold": {
+        "reliability_score": 0.8
+      }
+    }
+  },
+  "labels": {
+    "id": "ea23872d-ed5f-4499-badf-17d9aa57b0c1",
+    "version": "0.68.0"
+  },
+  "level": "info",
+  "metrics": {
+    "counter_server_query_cache_hit": 0,
+    "timer_rego_input_parse_ns": 24828,
+    "timer_rego_query_compile_ns": 68266,
+    "timer_rego_query_eval_ns": 20156,
+    "timer_rego_query_parse_ns": 47026,
+    "timer_server_handler_ns": 212705
+  },
+  "msg": "Decision Log",
+  "path": "policies/reliability/allow",
+  "req_id": 35,
+  "requested_by": "10.200.3.99:34758",
+  "result": false,
+  "time": "2024-10-28T15:29:41+10:30",
+  "timestamp": "2024-10-28T04:59:41.582305764Z",
+  "type": "openpolicyagent.org/decision_logs"
+}

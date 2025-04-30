@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cloud-layer
+  labels:
+    app: cloud-layer
+spec:
+  serviceName: "cloud-layer"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloud-layer
+  template:
+    metadata:
+      labels:
+        app: cloud-layer
+    spec:
+      containers:
+      - name: cloud-layer
+        image: edgemlops/cloud:latest
+        ports:
+        - containerPort: 8080
+        env:
+          - name: MLFLOW_TRACKING_URI
+            value: "http://mlflow:5002"
+          - name: PROMETHEUS_PORT
+            value: "8000"
+          - name: MODEL_STORAGE_PATH
+            value: "/app/models"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      nodeSelector:
+        kubernetes.io/hostname: liang-cloud-server

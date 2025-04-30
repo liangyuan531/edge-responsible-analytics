@@ -1,0 +1,17 @@
+paho-mqtt
+tensorflow
+numpy
+flask
+transformers
+scikit-learn
+kaggle
+fairlearn
+mlflow
+opa-python-client
+requests
+pandas
+shap
+pyyaml
+adversarial-robustness-toolbox
+schedule
+datasets

@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: edge-device
+  labels:
+    app: edge-device
+spec:
+  serviceName: "edge-device"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: edge-device
+  template:
+    metadata:
+      labels:
+        app: edge-device
+    spec:
+      imagePullSecrets:
+        - name: mlops
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - liang-edge-1
+                  # - liang-edge-2
+                  # - liang-edge-3
+                  # - liang-edge-4
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: edge-device
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: edge-device
+          image: edgemlops/edge-device:latest
+          args: ["--model_type", "$(MODEL_TYPE)", "--data_type", "$(DATA_TYPE)"]
+          ports:
+            - containerPort: 8001
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          env:              
+            - name: MQTT_BROKER
+              value: "10.42.1.12"
+            - name: MQTT_PORT
+              value: "1883"
+            - name: MQTT_TOPIC_UPLOAD
+              value: "models/upload"
+            - name: MQTT_TOPIC_AGGREGATED
+              value: "models/aggregated"
+            - name: DEVICE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: EDGE_SERVER_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: MODEL_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: edge-device-config
+                  key: model_type
+            - name: DATA_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: edge-device-config
+                  key: data_type

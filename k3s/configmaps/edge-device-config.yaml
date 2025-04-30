@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: edge-device-config
+data:
+  model_type: "MobileNet"
+  data_type: "chest_xray"

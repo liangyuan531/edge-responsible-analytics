@@ -1,8 +1,0 @@
-{
-    "fairness": {
-      "threshold": {
-        "accuracy": 0.8,
-        "demographic_parity_difference": 0.05
-      }
-    }
-  }

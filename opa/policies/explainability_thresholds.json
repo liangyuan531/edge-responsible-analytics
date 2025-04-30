@@ -1,0 +1,9 @@
+{
+  "explainability": {
+    "threshold": {
+      "explainability_score": 0.6,
+      "attention_score": 0.001, 
+      "interpretability_score": 0.001
+    }
+  }
+}

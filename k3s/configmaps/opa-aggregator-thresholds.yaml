@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opa-aggregator-thresholds
+  namespace: default
+data:
+  fairness_thresholds.json: |
+    {
+      "fairness": {
+        "threshold": {
+          "accuracy": 0.4,
+          "demographic_parity_difference": 0.05
+        }
+      }
+    }
+  reliability_thresholds.json: |
+    {
+      "reliability": {
+        "threshold": {
+          "reliability_score": 0.8
+        }
+      }
+    }
+  explainability_thresholds.json: |
+    {
+      "explainability": {
+        "threshold": {
+          "explainability_score": 0.6
+        }
+      }
+    }
+  privacy_thresholds.json: |
+    {
+      "privacy": {
+        "threshold": {
+          "privacy_score": 0.7
+        }
+      }
+    }

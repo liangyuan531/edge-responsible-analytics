@@ -1,0 +1,13 @@
+paho-mqtt
+tensorflow
+numpy
+flask
+torch
+transformers
+scikit-learn
+kaggle
+fairlearn
+pillow
+psutil
+tf_keras
+datasets

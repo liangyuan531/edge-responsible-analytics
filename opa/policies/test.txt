@@ -1,0 +1,15 @@
+curl -X POST \
+     -H 'Content-Type: application/json' \
+     -d '{"input": {
+            "fairness": {
+                "metrics": {
+                    "accuracy": 0.5,
+                    "demographic_parity_difference": 0.0
+                },
+            "threshold": {
+                    "accuracy": 0.4,
+                    "demographic_parity_difference": 0.05
+                }
+            }
+  }}' \
+     http://10.200.3.99:8181/v1/data/policies/fairness/demographic_parity/allow
