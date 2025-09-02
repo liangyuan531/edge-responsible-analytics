@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+mlflow
+prometheus-client
+numpy
+pydantic
+python-multipart
+psutil 
+fairlearn
+scikit-learn
+tensorflow
+requests
+shap
+pyyaml
+adversarial-robustness-toolbox

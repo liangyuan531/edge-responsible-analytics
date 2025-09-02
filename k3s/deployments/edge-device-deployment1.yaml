@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: edge-device-domain-1
+  labels:
+    app: edge-device
+  annotations:
+    configmap.reloader.stakater.com/reload: "edge-device-config"
+spec:
+  serviceName: "edge-device-domain-1"
+  replicas: 5
+  selector:
+    matchLabels:
+      app: edge-device
+  template:
+    metadata:
+      labels:
+        app: edge-device
+    spec:
+      # imagePullSecrets:
+      #   - name: mlops
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - node1
+                  - node2
+                  - node3
+                  - r5n02
+                  - r5n03
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: edge-device
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: edge-device
+          image: edgemlops/edge-device:latest
+          args: ["--task_type", "$(TASK_TYPE)", "--model_type", "$(MODEL_TYPE)", "--data_type", "$(DATA_TYPE)"]
+          ports:
+            - containerPort: 8001
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu: "250m"
+            limits:
+              memory: "4Gi"
+              cpu: "1000m"
+          env:              
+            - name: MQTT_BROKER
+              value: "mosquitto" #"10.42.4.6" #"10.42.1.12"
+            - name: MQTT_PORT
+              value: "1883"
+            - name: MQTT_TOPIC_UPLOAD
+              value: "models/upload"
+            - name: MQTT_TOPIC_AGGREGATED
+              value: "models/aggregated"
+            - name: DEVICE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: EDGE_SERVER_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: MODEL_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: edge-device-config
+                  key: model_type
+            - name: DATA_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: edge-device-config
+                  key: data_type
+            - name: TASK_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: edge-device-config
+                  key: task_type

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opa-privacy-policies
+  namespace: default
+data:
+  privacy_thresholds.json: |
+    {
+      "privacy": {
+        "thresholds": {
+          "privacy_score": 0.7
+          }
+        }
+    }
+  privacy.rego: |
+    package policies.privacy
+
+    # default allow = false
+
+    allow if {
+      input.privacy.k_anonymity >= input.privacy.thresholds.privacy_score
+    }

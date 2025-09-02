@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opa-explainability-policies
+  namespace: default
+data:
+  explainability_thresholds.json: |
+    {
+      "explainability": {
+        "threshold": {
+          "explainability_score": 0.6,
+          "attention_score": 0.001, 
+          "interpretability_score": 0.001
+        }
+      }
+    }
+  explainability.rego: |
+    package policies.explainability
+
+    # default allow = false
+
+    allow if {
+      input.explainability.metrics.explainability_score >= input.explainability.threshold.explainability_score
+    }
+
+    allow if {
+      input.explainability.metrics.attention_score >= input.explainability.threshold.attention_score
+      input.explainability.metrics.interpretability_score >= input.explainability.threshold.interpretability_score
+    }

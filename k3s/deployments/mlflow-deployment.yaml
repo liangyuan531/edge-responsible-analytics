@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mlflow
+  labels:
+    app: mlflow
+spec:
+  serviceName: "mlflow"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mlflow
+  template:
+    metadata:
+      labels:
+        app: mlflow
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - crest-bigdata-89acfcc4-c317-bf53-2acd-93bce3c87706-vm-0
+                - crest-bigdata-89acfcc4-c317-bf53-2acd-93bce3c87706-vm-1
+                - crest-bigdata-89acfcc4-c317-bf53-2acd-93bce3c87706-vm-2
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - mlflow
+            topologyKey: "kubernetes.io/hostname"
+      initContainers:
+      - name: init-mlflow
+        image: ghcr.io/mlflow/mlflow:v2.20.0
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            mlflow db upgrade sqlite:///mlflow/mlflow.db
+            mlflow experiments create-experiment --experiment-name "default" || true
+        volumeMounts:
+        - name: mlflow-storage
+          mountPath: /mlflow
+      containers:
+      - name: mlflow
+        image: ghcr.io/mlflow/mlflow:v2.20.0
+        command: ["mlflow", "server"]
+        args: [
+          "--host", "0.0.0.0",
+          "--port", "5002",
+          "--backend-store-uri", "sqlite:///mlflow/mlflow.db",
+          "--default-artifact-root", "/mlflow/mlruns",
+          "--workers", "3",
+          "--serve-artifacts"
+        ]
+        ports:
+        - containerPort: 5002
+        volumeMounts:
+        - name: mlflow-storage
+          mountPath: /mlflow
+        env:
+        - name: MLFLOW_TRACKING_URI
+          value: "http://mlflow:5002"
+        - name: MLFLOW_TRACKING_INSECURE_TLS
+          value: "true"
+        - name: MLFLOW_DEFAULT_EXPERIMENT_NAME
+          value: "default"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5002
+          initialDelaySeconds: 30
+          periodSeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5002
+          initialDelaySeconds: 15
+          periodSeconds: 30
+  volumeClaimTemplates:
+  - metadata:
+      name: mlflow-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: local-path
+      resources:
+        requests:
+          storage: 10Gi

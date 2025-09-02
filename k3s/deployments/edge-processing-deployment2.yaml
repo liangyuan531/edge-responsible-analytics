@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: edge-processing-server-2
+  labels:
+    app: edge-processing
+    server: server-2
+spec:
+  serviceName: "edge-processing-server-2"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: edge-processing
+      server: server-2
+  template:
+    metadata:
+      labels:
+        app: edge-processing
+        server: server-2
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - crest-bigdata-89acfcc4-c317-bf53-2acd-93bce3c87706-vm-2
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - edge-processing
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: edge-processing
+        image: edgemlops/edge-processing-server:latest
+        ports:
+        - containerPort: 8000
+        - containerPort: 5002  # MLflow server
+        - containerPort: 8181  # OPA server
+        - containerPort: 1883  # MQTT broker
+        env:
+          - name: MQTT_BROKER
+            value: "mosquitto" #"10.42.5.5" # "10.42.1.12"
+          - name: MQTT_PORT
+            value: "1883"
+          - name: MQTT_TOPIC_UPLOAD
+            value: "models/upload"
+          - name: MQTT_TOPIC_AGGREGATED
+            value: "models/aggregated"
+          - name: EXPECTED_DEVICES
+            value: "4"
+          - name: EDGE_SERVER_ID
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: CLOUD_API_URL
+            value: "http://cloud-layer:8080"
+          - name: MLFLOW_TRACKING_URI
+            value: "http://10.42.5.7:5002" # "http://mlflow:5002"
+          - name: USE_MLFLOW
+            value: "true"
+          - name: PYTHONPATH
+            value: "/app"
+          - name: PYTHONUNBUFFERED
+            value: "1"
+          - name: RESULTS_DIR
+            value: "/app/data"
+          - name: HOST_RESULTS_DIR
+            value: "/app/host-data"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "250m"
+          limits:
+            memory: "4Gi"
+            cpu: "1000m"
+        volumeMounts:
+          - name: data-volume
+            mountPath: /app/data
+          - name: host-data-volume
+            mountPath: /app/host-data
+          - name: edge-config-volume
+            mountPath: /etc/edge-config
+            readOnly: true
+      volumes:
+      - name: host-data-volume
+        hostPath:
+          path: /tmp/edge-processing
+          type: DirectoryOrCreate
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: edge-processing-data-server-2
+      - name: edge-config-volume
+        configMap:
+          name: edge-device-config

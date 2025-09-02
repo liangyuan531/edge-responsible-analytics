@@ -1,0 +1,12 @@
+{
+  "client_addr": "10.200.3.99:34758",
+  "level": "info",
+  "msg": "Sent response.",
+  "req_id": 35,
+  "req_method": "POST",
+  "req_path": "/v1/data/policies/reliability/allow",
+  "resp_bytes": 70,
+  "resp_duration": 0.379513,
+  "resp_status": 200,
+  "time": "2024-10-28T15:29:41+10:30"
+}

@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opa-reliability-policies
+  namespace: default
+data:
+  reliability_thresholds.json: |
+    {
+      "reliability": {
+        "threshold": {
+          "reliability_score": 0.5,
+          "prediction_stability": 0.5
+        }
+      }
+    }
+  reliability.rego: |
+    package policies.reliability
+
+    # default allow = false
+
+    allow if {
+      input.reliability.metrics.reliability_score >= input.reliability.threshold.reliability_score
+    }
+
+    allow if {
+      input.reliability.metrics.prediction_stability >= input.reliability.threshold.prediction_stability
+    }

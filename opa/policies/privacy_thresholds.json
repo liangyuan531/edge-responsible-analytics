@@ -1,0 +1,7 @@
+{
+    "privacy": {
+      "threshold": {
+        "k": 5
+      }
+    }
+  }

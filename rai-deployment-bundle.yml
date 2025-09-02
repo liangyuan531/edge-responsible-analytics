@@ -1,0 +1,106 @@
+---
+- name: Setup and deploy edge-responsible-analytics on first remote host only
+  hosts: "{{ groups['all'][0] }}"
+  gather_facts: true
+
+  vars:
+    repo_url: "https://github.com/pipeedge/edge-responsible-analytics/archive/refs/tags/release.zip"
+    repo_zip: "repo.zip"
+    extract_dir: "edge-responsible-analytics-extract"  # Temporary extraction directory
+    required_space_kb: 1000000  # 1GB in KB
+    model_name: "MobileNet"
+    dataset_name: "chest_xray"
+    mode: "training"
+
+  tasks:
+    - name: Set home directory fact correctly
+      ansible.builtin.set_fact:
+        user_home: "{{ ansible_facts.home | default('/home/' + ansible_user) }}"
+
+    - name: Debug - Check user home
+      ansible.builtin.debug:
+        msg: "Using home directory: {{ user_home }}"
+
+    - name: Check for required commands
+      ansible.builtin.command: "which {{ item }}"
+      register: cmd_check
+      failed_when: cmd_check.rc != 0
+      with_items:
+        - curl
+        - unzip
+
+    - name: Check available disk space
+      ansible.builtin.command: "df -k {{ user_home }}"
+      register: disk_space
+
+    - name: Fail if not enough disk space
+      ansible.builtin.fail:
+        msg: "Insufficient disk space. Required: 1GB, Available: {{ (available_space/1000)|int }}MB"
+      when: (available_space | int) < (required_space_kb | int)
+      vars:
+        available_space: "{{ disk_space.stdout_lines[1].split()[3] }}"
+
+    - name: Download repository zip
+      ansible.builtin.get_url:
+        url: "{{ repo_url }}"
+        dest: "{{ user_home }}/{{ repo_zip }}"
+        timeout: 300
+        force: yes
+
+    # Create a clean extraction directory
+    - name: Create extraction directory
+      ansible.builtin.file:
+        path: "{{ user_home }}/{{ extract_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Unzip repository
+      ansible.builtin.unarchive:
+        src: "{{ user_home }}/{{ repo_zip }}"
+        dest: "{{ user_home }}/{{ extract_dir }}"
+        remote_src: true
+
+    - name: Debug - Find extracted content
+      ansible.builtin.command: "find {{ user_home }}/{{ extract_dir }} -type f -name deploy.sh"
+      register: find_deploy_script
+      changed_when: false
+
+    - name: Debug - Show deploy script location
+      ansible.builtin.debug:
+        var: find_deploy_script.stdout_lines
+
+    - name: Set deploy script directory
+      ansible.builtin.set_fact:
+        deploy_dir: "{{ find_deploy_script.stdout_lines[0] | dirname }}"
+      when: find_deploy_script.stdout_lines | length > 0
+
+    - name: Fail if deploy.sh is missing
+      ansible.builtin.fail:
+        msg: "deploy.sh not found in the extracted repository"
+      when: find_deploy_script.stdout_lines | length == 0
+
+    - name: Remove zip file
+      ansible.builtin.file:
+        path: "{{ user_home }}/{{ repo_zip }}"
+        state: absent
+
+    - name: Make deploy.sh executable
+      ansible.builtin.file:
+        path: "{{ deploy_dir }}/deploy.sh"
+        mode: '0755'
+      when: deploy_dir is defined
+
+    - name: Run deploy.sh with arguments
+      ansible.builtin.command: "./deploy.sh {{ model_name }} {{ dataset_name }} {{ mode }}"
+      args:
+        chdir: "{{ deploy_dir }}"
+      environment:
+        KUBECONFIG: "/home/ubuntu/.kube/config"
+      register: deploy_result
+      ignore_errors: false
+      when: deploy_dir is defined
+
+    - name: Fail if deploy.sh failed
+      ansible.builtin.fail:
+        msg: "deploy.sh failed with rc={{ deploy_result.rc }}: {{ deploy_result.stderr }}"
+      when: deploy_dir is defined and deploy_result.rc != 0

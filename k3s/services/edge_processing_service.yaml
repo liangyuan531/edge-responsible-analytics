@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge-processing-service
+  labels:
+    app: edge-processing
+spec:
+  ports:
+  - port: 8000
+    targetPort: 8000
+    name: api-port
+  - port: 5002
+    targetPort: 5002
+    name: mlflow-port
+  - port: 8181
+    targetPort: 8181
+    name: opa-port
+  - port: 1883
+    targetPort: 1883
+    name: mqtt-port
+  selector:
+    app: edge-processing

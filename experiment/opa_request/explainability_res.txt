@@ -1,0 +1,12 @@
+{
+  "client_addr": "10.200.3.99:60202",
+  "level": "info",
+  "msg": "Sent response.",
+  "req_id": 34,
+  "req_method": "POST",
+  "req_path": "/v1/data/policies/explainability/allow",
+  "resp_bytes": 70,
+  "resp_duration": 0.339003,
+  "resp_status": 200,
+  "time": "2024-10-28T15:29:06+10:30"
+}

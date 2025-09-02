@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cloud-layer
+  labels:
+    app: cloud-layer
+spec:
+  serviceName: "cloud-layer"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloud-layer
+  template:
+    metadata:
+      labels:
+        app: cloud-layer
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: crest-bigdata-89acfcc4-c317-bf53-2acd-93bce3c87706-vm-0
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node.kubernetes.io/disk-pressure
+        operator: Exists
+        effect: NoSchedule
+      containers:
+      - name: cloud-layer
+        image: edgemlops/cloud:latest
+        ports:
+        - containerPort: 8080
+        env:
+          - name: MLFLOW_TRACKING_URI
+            value: "http://mlflow:5002" # "http://10.42.0.19:5002" 
+          - name: PROMETHEUS_PORT
+            value: "8000"
+          - name: MODEL_STORAGE_PATH
+            value: "/app/models"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "250m"
+          limits:
+            memory: "4Gi"
+            cpu: "500m"

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-config
+data:
+  config.yaml: |
+    model_registry:
+      storage_path: "/models"
+      backup_path: "/models/backup"
+    
+    aggregation:
+      min_edge_servers: 1
+      aggregation_frequency: "1h"
+      weight_strategy: "equal"
+    
+    monitoring:
+      metrics_retention_days: 7
+      alert_threshold:
+        model_drift: 0.2
+        performance_degradation: 0.15
